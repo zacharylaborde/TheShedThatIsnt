@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The shed that isn’t</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --panel: rgba(250,247,240,0.86);
+  --panel-line: rgba(40,60,70,0.18);
+  --ink: #1d2b33;
+  --ink-soft: #4a5b63;
+  --accent: #2f8f88;
+  --accent-ink: #ffffff;
+  --knob: rgba(255,255,255,0.85);
+  --base: rgba(29,43,51,0.18);
+  --bg: #9cc6e0;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --panel: rgba(20,28,34,0.84);
+    --panel-line: rgba(200,225,230,0.16);
+    --ink: #e8f0f2;
+    --ink-soft: #a9bcc2;
+    --accent: #5cc4bb;
+    --accent-ink: #0d1a1c;
+    --knob: rgba(240,248,250,0.8);
+    --base: rgba(240,248,250,0.16);
+    --bg: #1a2a35;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --panel: rgba(20,28,34,0.84);
+  --panel-line: rgba(200,225,230,0.16);
+  --ink: #e8f0f2;
+  --ink-soft: #a9bcc2;
+  --accent: #5cc4bb;
+  --accent-ink: #0d1a1c;
+  --knob: rgba(240,248,250,0.8);
+  --base: rgba(240,248,250,0.16);
+  --bg: #1a2a35;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;top:0;left:0;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 0 calc(12px + env(safe-area-inset-left,0px));pointer-events:none}
+.hud-card{background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;padding:8px 12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);min-width:150px}
+.where{font-weight:700;font-size:15px;line-height:1.2}
+.stat{font-size:13px;color:var(--ink-soft);line-height:1.4}
+.stat b{color:var(--ink);font-weight:700}
+.gear{position:fixed;top:0;right:0;margin:calc(10px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) 0 0;width:44px;height:44px;border-radius:50%;border:1px solid var(--panel-line);background:var(--panel);color:var(--ink);font-size:20px;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.gear:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sheet{position:fixed;right:0;bottom:0;left:0;margin:0 auto;max-width:440px;max-height:85vh;overflow:auto;background:var(--panel);border:1px solid var(--panel-line);border-radius:18px 18px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transform:translateY(110%);transition:transform .25s ease}
+.sheet.open{transform:none}
+@media (prefers-reduced-motion: reduce){.sheet{transition:none}}
+.sheet h2{font-size:17px;margin:0 0 10px}
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.row label{flex:0 0 112px;font-size:14px;color:var(--ink-soft)}
+.row input[type=range]{flex:1}
+.row output{min-width:56px;text-align:right;font-weight:700;font-size:14px}
+.note{font-size:13px;color:var(--ink-soft);margin:4px 0 12px;line-height:1.45}
+select{font:inherit;font-size:14px;padding:6px 8px;border-radius:10px;border:1px solid var(--panel-line);background:transparent;color:var(--ink);flex:1}
+.btn{font:inherit;font-weight:700;font-size:15px;border:none;border-radius:12px;padding:11px 16px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn.quiet{background:transparent;color:var(--ink);border:1px solid var(--panel-line)}
+.btns{display:flex;gap:10px;margin-top:14px}
+.btns .btn{flex:1}
+.intro{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:rgba(10,20,25,0.28)}
+.intro-card{max-width:380px;background:var(--panel);border:1px solid var(--panel-line);border-radius:20px;padding:22px 22px 18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.intro-card h1{font-size:26px;line-height:1.15;margin:0 0 10px;letter-spacing:-0.01em}
+.intro-card p{font-size:15px;line-height:1.5;margin:0 0 10px;color:var(--ink-soft)}
+.intro-card p strong{color:var(--ink)}
+.stick{position:fixed;width:120px;height:120px;border-radius:50%;background:var(--base);border:1px solid var(--panel-line);pointer-events:none;display:none;transform:translate(-50%,-50%)}
+.knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--knob);box-shadow:0 2px 8px rgba(0,0,0,0.18)}
+.hint{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;pointer-events:none;font-size:13px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5)}
+.err{position:fixed;inset:0;display:none;place-items:center;padding:24px;text-align:center}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="A walkable 3D field with a shed that is much bigger on the inside"></canvas>
+
+<div class="hud" aria-live="polite">
+  <div class="hud-card">
+    <div class="where" id="where">Outside</div>
+    <div class="stat">Local scale <b id="scale">×1.0</b></div>
+    <div class="stat">Walked <b id="walked">0 m</b></div>
+  </div>
+</div>
+
+<button class="gear" id="gear" aria-label="Open settings">⚙︎</button>
+<div class="hint" id="hint"><span>Left thumb: walk</span><span>Right thumb: look</span></div>
+<div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+
+<div class="sheet" id="sheet" role="dialog" aria-label="Settings">
+  <h2>Settings</h2>
+  <div class="row"><label for="phi">Room inside</label><input type="range" id="phi" min="1.5" max="4" step="0.1" value="3"><output id="phiv">×20</output></div>
+  <div class="row"><label for="cor">Hallway length</label><input type="range" id="cor" min="0.6" max="1.6" step="0.05" value="1.1"><output id="corv">1.1 m</output></div>
+  <p class="note" id="sizeNote"></p>
+  <div class="row"><label for="qual">Sharpness</label><select id="qual"><option value="0.35">Fast</option><option value="0.5" selected>Balanced</option><option value="0.75">Sharp</option></select></div>
+  <div class="btns"><button class="btn quiet" id="reset">Back to the start</button><button class="btn" id="close">Done</button></div>
+</div>
+
+<div class="intro" id="intro">
+  <div class="intro-card">
+    <h1>The shed that isn’t</h1>
+    <p>There’s an ordinary garden shed in this field, with a door at the front and another at the back.</p>
+    <p>Behind each door is a short hallway that feels perfectly normal to walk through. On the map, though, each hallway is a funnel, and as you walk it, the metric <strong>e<sup>2φ</sup>(dx² + dy² + dz²)</strong> smoothly grows you into a hall twenty times bigger than the shed, or shrinks you back out.</p>
+    <p>A dark-framed door in the hall’s left wall is a shortcut of a different kind: it’s glued straight to a garden wall in the field.</p>
+    <p>Left thumb walks. Right thumb looks. On a computer, use WASD and drag with the mouse.</p>
+    <div class="btns"><button class="btn" id="start">Start walking</button></div>
+  </div>
+</div>
+
+<div class="err" id="err"><div class="intro-card"><h1>3D isn’t available here</h1><p>This page needs WebGL. Try opening it in Safari or Chrome with hardware acceleration turned on.</p></div></div>
+<script>
+(function(){
+const canvas=document.getElementById('c');
+const gl=canvas.getContext('webgl',{antialias:false,powerPreference:'high-performance'});
+if(!gl){document.getElementById('err').style.display='grid';document.getElementById('intro').style.display='none';return;}
+
+const H={x:2.0,y:2.6,z:2.4};
+const T=0.12,DW=0.55,DH=1.9;
+let PHI=3.0, LP=1.1, QUAL=0.5;
+
+const vs=`attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}`;
+const fs=`
+precision highp float;
+uniform vec2 uRes;uniform vec3 uCam;uniform float uYaw,uPitch,uPhi,uLp,uS,uT,uDW,uDH;uniform vec3 uH;uniform vec3 uPB,uPA;uniform vec2 uPS;
+float S(float u){return u*u*u*(u*(u*6.-15.)+10.);}
+float sdBox(vec3 p,vec3 b){vec3 q=abs(p)-b;return length(max(q,0.))+min(max(q.x,max(q.y,q.z)),0.);}
+float sdCyl(vec3 p,float r,float h){vec2 d=vec2(length(p.xz)-r,abs(p.y-h*.5)-h*.5);return min(max(d.x,d.y),0.)+length(max(d,0.));}
+float hzA(){return -uH.z+uLp;}
+float hzB(){return uH.z-uLp;}
+float phiF(float z){return uPhi*S(clamp((uH.z-z)/uLp,0.,1.));}
+float phiB(float z){return uPhi*S(clamp((z+uH.z)/uLp,0.,1.));}
+bool inHall(vec3 p){return abs(p.x)<uH.x-uT&&p.z>hzA()&&p.z<hzB()&&p.y<uH.y-uT;}
+bool inF(vec3 p){float e=exp(-phiF(p.z));return p.z>=hzB()&&p.z<=uH.z&&abs(p.x)<uDW*e&&p.y<uDH*e;}
+bool inBk(vec3 p){float e=exp(-phiB(p.z));return p.z<=hzA()&&p.z>=-uH.z&&abs(p.x)<uDW*e&&p.y<uDH*e;}
+float sdF(vec3 p){float zc=clamp(p.z,hzB(),uH.z);float e=exp(-phiF(zc));float dz=max(hzB()-.02-p.z,p.z-uH.z-.02);return max(max(abs(p.x)-uDW*e,p.y-uDH*e),dz)*.7;}
+float sdBk(vec3 p){float zc=clamp(p.z,-uH.z,hzA());float e=exp(-phiB(zc));float dz=max(-uH.z-.02-p.z,p.z-hzA()-.02);return max(max(abs(p.x)-uDW*e,p.y-uDH*e),dz)*.7;}
+float sF(float z){float a=clamp(z,hzB(),uH.z);float acc=0.;for(int k=0;k<8;k++){acc+=exp(phiF(mix(a,uH.z,(float(k)+.5)/8.)));}return acc*(uH.z-a)/8.;}
+float sB(float z){float a=clamp(z,-uH.z,hzA());float acc=0.;for(int k=0;k<8;k++){acc+=exp(phiB(mix(-uH.z,a,(float(k)+.5)/8.)));}return acc*(a+uH.z)/8.;}
+vec2 scene(vec3 p){
+  vec2 res=vec2(p.y,1.);
+  float ang=atan(p.z,p.x);float rr=length(p.xz);
+  float sec=6.2831853/12.;float a2=mod(ang,sec)-sec*.5;
+  vec3 q=vec3(rr*cos(a2)-6.5,p.y,rr*sin(a2));
+  float dp=sdCyl(q,.18,2.6);if(dp<res.x)res=vec2(dp,2.);
+  vec2 cell=floor(p.xz/9.+.5);
+  if(length(cell)>1.05){vec3 qb=vec3(p.x-cell.x*9.,p.y-1.,p.z-cell.y*9.);float db=sdBox(qb,vec3(.8,1.,.8));if(db<res.x)res=vec2(db,5.);}
+  float outer=sdBox(p-vec3(0.,uH.y*.5,0.),vec3(uH.x,uH.y*.5,uH.z));
+  float a=hzA(),b=hzB();
+  float hall=sdBox(p-vec3(0.,(uH.y-uT-1.)*.5,(a+b)*.5),vec3(uH.x-uT,(uH.y-uT+1.)*.5,(b-a)*.5));
+  float walls=max(max(outer,-hall),max(-sdF(p),-sdBk(p)));
+  if(walls<res.x)res=vec2(walls,6.);
+  float roof=sdBox(p-vec3(0.,uH.y+.06,0.),vec3(uH.x+.18,.06,uH.z+.18));
+  if(roof<res.x)res=vec2(roof,7.);
+  float gw=sdBox(p-vec3(uPA.x-.15,1.3,uPA.z),vec3(.15,1.3,3.));
+  if(gw<res.x)res=vec2(gw,8.);
+  vec3 c=p-vec3(0.,0.,(a+b)*.5);
+  float sp=9.*uS;vec2 cid=floor(c.xz/sp+.5);
+  float hx=uH.x-uT-sp*.5,hzz=(b-a)*.5-sp*.5;
+  if(abs(cid.x*sp)<hx&&abs(cid.y*sp)<hzz&&dot(cid,cid)>.5){
+    vec3 qc=vec3(c.x-cid.x*sp,p.y,c.z-cid.y*sp);
+    float dc=sdCyl(qc,.5*uS,uH.y);if(dc<res.x)res=vec2(dc,3.);
+  }
+  float dor=length(c-vec3(0.,5.*uS,0.))-3.*uS;if(dor<res.x)res=vec2(dor,4.);
+  float ped=sdCyl(c,1.6*uS,2.*uS);if(ped<res.x)res=vec2(ped,3.);
+  return res;
+}
+float phiAt(vec3 p){if(inHall(p))return uPhi;if(inF(p))return phiF(p.z);if(inBk(p))return phiB(p.z);return 0.;}
+vec3 normalAt(vec3 p,float sc){float e=.0008*sc;vec2 k=vec2(e,0.);
+  return normalize(vec3(scene(p+k.xyy).x-scene(p-k.xyy).x,scene(p+k.yxy).x-scene(p-k.yxy).x,scene(p+k.yyx).x-scene(p-k.yyx).x));}
+bool onHallDoor(vec3 p){return p.x<uPB.x+.004*uS&&abs(p.z-uPB.z)<uPS.x*uS&&p.y<uPS.y*uS&&inHall(p+vec3(.01*uS,0.,0.));}
+bool onFieldDoor(vec3 p){return p.x>uPA.x-.002&&p.x<uPA.x+.004&&abs(p.z-uPA.z)<uPS.x&&p.y<uPS.y;}
+vec3 sky(vec3 d){float t=smoothstep(-.05,.55,d.y);return mix(vec3(.96,.91,.80),vec3(.50,.69,.84),t);}
+void main(){
+  vec2 uv=(gl_FragCoord.xy*2.-uRes)/uRes.y;
+  vec3 f=vec3(sin(uYaw)*cos(uPitch),sin(uPitch),-cos(uYaw)*cos(uPitch));
+  vec3 rt=normalize(cross(f,vec3(0.,1.,0.)));vec3 up=cross(rt,f);
+  vec3 v=normalize(f*1.25+uv.x*rt+uv.y*up);
+  vec3 p=uCam;float L=0.;vec2 hit=vec2(-1.);float eS=exp(uPhi);int tp=0;
+  for(int i=0;i<160;i++){
+    vec2 m=scene(p);
+    bool hl=inHall(p);bool fr=!hl&&inF(p);bool bk=!hl&&!fr&&inBk(p);
+    float lp=hl?uPhi:(fr?phiF(p.z):(bk?phiB(p.z):0.));float sc=exp(-lp);
+    if(m.x<.0007*sc*(1.+L*.015)){
+      if(tp<3&&hl&&v.x<0.&&onHallDoor(p)){
+        vec3 d=p-uPB;p=uPA+eS*vec3(-d.x,d.y,-d.z);v=vec3(-v.x,v.y,-v.z);p+=v*.01;tp++;continue;
+      }
+      if(tp<3&&!hl&&!fr&&!bk&&v.x<0.&&onFieldDoor(p)){
+        vec3 d=p-uPA;p=uPB+uS*vec3(-d.x,d.y,-d.z);v=vec3(-v.x,v.y,-v.z);p+=v*.01*uS;tp++;continue;
+      }
+      hit=m;break;
+    }
+    if(fr||bk){
+      float h=max(min(m.x,.02*uLp),.0003);
+      float n0=exp(lp);p+=v*h;L+=h*n0;
+      float n1=exp(fr?phiF(p.z):phiB(p.z));
+      vec2 vt=v.xy*n0/n1;float t2=1.-dot(vt,vt);
+      if(t2<0.){v.z=-v.z;}else{v=vec3(vt,sign(v.z)*sqrt(t2));}
+    }else if(hl){
+      float h=min(m.x,max(min(sdF(p),sdBk(p)),.0003));h=max(h,.0003*sc*(1.+L*.01));
+      p+=v*h;L+=h*eS;
+    }else{
+      float h=min(m.x,max(min(sdF(p),sdBk(p)),.002));h=max(h,.002);
+      p+=v*h;L+=h;
+    }
+    if(L>220.||p.y<-1.||length(p)>200.)break;
+  }
+  vec3 col;
+  if(hit.y<0.){col=sky(v);}
+  else{
+    float sc0=exp(-phiAt(p));
+    vec3 n=normalAt(p,sc0);
+    vec3 po=p+n*.002*sc0;
+    bool hl=inHall(po);bool fr=!hl&&inF(po);bool bk=!hl&&!fr&&inBk(po);
+    bool hw=fr||bk;
+    float lp=hl?uPhi:(fr?phiF(po.z):(bk?phiB(po.z):0.));
+    float sAlong=fr?sF(po.z):(bk?sB(po.z):0.);
+    float es=exp(lp);
+    vec3 base;
+    if(hit.y<1.5){
+      if(hl){vec2 Q=(p.xz-vec2(0.,(hzA()+hzB())*.5))/uS;float t=mod(floor(Q.x*.5)+floor(Q.y*.5),2.);base=mix(vec3(.90,.88,.83),vec3(.62,.66,.72),t);}
+      else if(hw){float bd=mod(floor(p.x*es*5.),2.);float jt=step(.03,fract(sAlong*.5+bd*.5));base=mix(vec3(.50,.36,.25),mix(vec3(.66,.50,.35),vec3(.60,.45,.31),bd),jt);}
+      else if(abs(p.x)<uH.x&&abs(p.z)<uH.z){base=vec3(.55,.42,.30);}
+      else{float ch=mod(floor(p.x)+floor(p.z),2.);base=mix(vec3(.81,.89,.83),vec3(.66,.80,.70),ch);}
+    }else if(hit.y<2.5){
+      float idx=floor((atan(p.z,p.x)+3.14159)/(6.2831853/12.));base=.55+.4*cos(6.2831*(idx/12.+vec3(0.,.33,.67)));
+    }else if(hit.y<3.5){
+      base=vec3(.90,.87,.80);
+    }else if(hit.y<4.5){
+      base=vec3(1.,.80,.45);
+    }else if(hit.y<5.5){
+      base=vec3(.56,.60,.70);
+    }else if(hit.y<6.5){
+      if(hl&&abs(p.x-uPB.x)<.01*uS&&abs(p.z-uPB.z)<(uPS.x+.18)*uS&&p.y<(uPS.y+.18)*uS){
+        base=vec3(.30,.20,.14);
+      }else if(hl){
+        float yph=p.y/uS;
+        float band=step(3.,yph);float mold=1.-.18*smoothstep(.0,.3,abs(fract(yph/6.)-.5)*2.-.9);
+        float pan=.06*step(.5,fract((p.x+p.z)/uS/4.));
+        base=mix(vec3(.55,.38,.30),vec3(.93,.89,.80)-pan,band)*mold;
+      }else if(hw){
+        float yy=p.y*es;
+        if(n.y<-.5){base=vec3(.92,.90,.86);}
+        else{
+          float wain=step(1.,yy);float rail=1.-.35*(1.-step(.05,abs(yy-1.)));
+          float stripe=.05*step(.5,fract(sAlong*1.6));
+          base=mix(vec3(.46,.32,.24),vec3(.86,.80,.70)-stripe,wain)*rail;
+        }
+      }else{
+        bool frame=(abs(p.x)<uDW+.12&&p.y<uDH+.12&&abs(abs(p.z)-uH.z)<.02);
+        float pl=step(.5,fract(p.y*4.));base=frame?vec3(.30,.20,.14):vec3(.58,.40,.27)*(.86+.14*pl);
+      }
+    }else if(hit.y<7.5){
+      base=vec3(.33,.27,.25);
+    }else{
+      bool fm=abs(p.x-uPA.x)<.01&&abs(p.z-uPA.z)<uPS.x+.18&&p.y<uPS.y+.18;
+      vec2 st2=vec2(p.z*2.2+floor(p.y*3.)*.5,p.y*3.);float m2=step(.06,fract(st2.x))*step(.08,fract(st2.y));
+      base=fm?vec3(.30,.20,.14):mix(vec3(.45,.43,.40),vec3(.70,.67,.62),m2);
+    }
+    vec3 sun=normalize(vec3(.5,.8,.3));
+    float diff=max(dot(n,sun),0.);
+    if(hl){col=base*(.62+.38*max(dot(n,normalize(vec3(.2,1.,.4))),0.))*vec3(1.,.97,.92);}
+    else if(hw){float lamp=.82+.18*cos(sAlong*1.3);col=base*(.55+.3*max(n.y,0.)+.12*abs(n.x))*lamp*vec3(1.,.95,.86);}
+    else{col=base*(.48+.62*diff);}
+    if(hit.y>3.5&&hit.y<4.5)col=base*1.15;
+    float fog=1.-exp(-L/150.);
+    col=mix(col,hl?vec3(.93,.90,.84):sky(v),fog);
+  }
+  gl_FragColor=vec4(pow(col,vec3(.95)),1.);
+}`;
+function sh(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(o));document.getElementById('err').style.display='grid';}return o;}
+const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);gl.useProgram(pr);
+const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+const al=gl.getAttribLocation(pr,'a');gl.enableVertexAttribArray(al);gl.vertexAttribPointer(al,2,gl.FLOAT,false,0,0);
+const U={};['uRes','uCam','uYaw','uPitch','uPhi','uLp','uS','uT','uDW','uDH','uH','uPB','uPA','uPS'].forEach(n=>U[n]=gl.getUniformLocation(pr,n));
+
+function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.max(1,Math.round(innerWidth*dpr*QUAL));canvas.height=Math.max(1,Math.round(innerHeight*dpr*QUAL));gl.viewport(0,0,canvas.width,canvas.height);}
+addEventListener('resize',resize);resize();
+
+const S=u=>u*u*u*(u*(u*6-15)+10);
+const hzA=()=>-H.z+LP, hzB=()=>H.z-LP;
+const phiF=z=>PHI*S(Math.min(1,Math.max(0,(H.z-z)/LP)));
+const phiB=z=>PHI*S(Math.min(1,Math.max(0,(z+H.z)/LP)));
+const hallXZ=(x,z)=>Math.abs(x)<H.x-T&&z>hzA()&&z<hzB();
+const frXZ=(x,z)=>z>=hzB()&&z<=H.z&&Math.abs(x)<DW*Math.exp(-phiF(z));
+const bkXZ=(x,z)=>z<=hzA()&&z>=-H.z&&Math.abs(x)<DW*Math.exp(-phiB(z));
+function phiP(x,z){if(hallXZ(x,z))return PHI;if(frXZ(x,z))return phiF(z);if(bkXZ(x,z))return phiB(z);return 0;}
+const EYE=1.6,R=0.22;
+const PA={x:-9,z:0},PW=0.7,PHT=2.2;
+function portalB(){return {x:-(H.x-T),z:(hzA()+hzB())*0.5};}
+const st={x:0,z:8,y:EYE,yaw:0,pitch:-0.03,walked:0};
+function eyeY(){st.y=EYE*Math.exp(-phiP(st.x,st.z));}
+function free(x,z){
+  if(x>PA.x-0.3-R&&x<PA.x+R&&Math.abs(z-PA.z)<3+R){
+    if(!(Math.abs(z-PA.z)<PW-0.25&&x>PA.x-0.05))return false;
+  }
+  const zf=Math.min(H.z,Math.max(hzB(),z));
+  if(z>=hzB()-0.01&&z<=H.z+R+0.05&&Math.abs(x)<(DW-R)*Math.exp(-phiF(zf)))return true;
+  const zb=Math.min(hzA(),Math.max(-H.z,z));
+  if(z<=hzA()+0.01&&z>=-H.z-R-0.05&&Math.abs(x)<(DW-R)*Math.exp(-phiB(zb)))return true;
+  if(!(Math.abs(x)<H.x+R&&Math.abs(z)<H.z+R))return true;
+  const sc=Math.exp(-PHI),m=R*sc,B=portalB();
+  if(Math.abs(z-B.z)<(PW-0.25)*sc&&x>B.x-0.02*sc&&x<B.x+0.3*sc)return true;
+  return Math.abs(x)<H.x-T-m&&z>hzA()+m&&z<hzB()-m;
+}
+eyeY();
+
+const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true});addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+let joy={id:null,ox:0,oy:0,x:0,y:0};let look={id:null,lx:0,ly:0};
+const stick=document.getElementById('stick'),knob=document.getElementById('knob');
+canvas.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'){look.id=e.pointerId;look.lx=e.clientX;look.ly=e.clientY;canvas.setPointerCapture(e.pointerId);return;}
+  if(e.clientX<innerWidth*0.5&&joy.id===null){joy.id=e.pointerId;joy.ox=e.clientX;joy.oy=e.clientY;joy.x=0;joy.y=0;stick.style.left=e.clientX+'px';stick.style.top=e.clientY+'px';stick.style.display='block';knob.style.transform='translate(0,0)';}
+  else if(look.id===null){look.id=e.pointerId;look.lx=e.clientX;look.ly=e.clientY;}
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+  if(e.pointerId===joy.id){let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const m=Math.hypot(dx,dy),RR=50;if(m>RR){dx*=RR/m;dy*=RR/m;}joy.x=dx/RR;joy.y=-dy/RR;knob.style.transform=`translate(${dx}px,${dy}px)`;}
+  else if(e.pointerId===look.id){const dx=e.clientX-look.lx,dy=e.clientY-look.ly;look.lx=e.clientX;look.ly=e.clientY;st.yaw+=dx*0.006;st.pitch=Math.max(-1.3,Math.min(1.3,st.pitch-dy*0.006));}
+});
+function endP(e){if(e.pointerId===joy.id){joy.id=null;joy.x=0;joy.y=0;stick.style.display='none';}if(e.pointerId===look.id){look.id=null;}}
+canvas.addEventListener('pointerup',endP);canvas.addEventListener('pointercancel',endP);
+
+function move(dx,dz,speed,dt){
+  const k=speed*dt*Math.exp(-phiP(st.x,st.z));
+  const nx=st.x+dx*k,nz=st.z+dz*k;
+  const B=portalB(),sc=Math.exp(-PHI),es=Math.exp(PHI);
+  if(hallXZ(st.x,st.z)&&nx<=B.x&&Math.abs(nz-B.z)<(PW-0.25)*sc){st.x=PA.x+es*(B.x-nx)+0.02;st.z=PA.z-es*(nz-B.z);st.yaw+=Math.PI;}
+  else if(phiP(st.x,st.z)===0&&st.x>PA.x&&nx<=PA.x&&Math.abs(nz-PA.z)<PW-0.25){st.x=B.x+sc*(PA.x-nx)+0.02*sc;st.z=B.z-sc*(nz-PA.z);st.yaw+=Math.PI;}
+  else if(free(nx,nz)){st.x=nx;st.z=nz;}else if(free(nx,st.z)){st.x=nx;}else if(free(st.x,nz)){st.z=nz;}
+  st.walked+=speed*dt;eyeY();
+}
+window.__pocket={st,move,free,phiP,hallXZ,frXZ,bkXZ,portalB};
+
+const whereEl=document.getElementById('where'),scaleEl=document.getElementById('scale'),walkedEl=document.getElementById('walked');
+let last=performance.now(),hudT=0;
+function frame(t){
+  const dt=Math.min(0.05,(t-last)/1000);last=t;
+  let mx=joy.x,my=joy.y;
+  if(keys['w']||keys['arrowup'])my+=1;if(keys['s']||keys['arrowdown'])my-=1;if(keys['a']||keys['arrowleft'])mx-=1;if(keys['d']||keys['arrowright'])mx+=1;
+  const mag=Math.min(1,Math.hypot(mx,my));
+  if(mag>0.02){
+    const fx=Math.sin(st.yaw),fz=-Math.cos(st.yaw),rx=Math.cos(st.yaw),rz=Math.sin(st.yaw);
+    let dx=my*fx+mx*rx,dz=my*fz+mx*rz;const n=Math.hypot(dx,dz)||1;dx/=n;dz/=n;
+    move(dx,dz,3.2*mag,dt);
+  }
+  gl.uniform2f(U.uRes,canvas.width,canvas.height);gl.uniform3f(U.uCam,st.x,st.y,st.z);
+  gl.uniform1f(U.uYaw,st.yaw);gl.uniform1f(U.uPitch,st.pitch);gl.uniform1f(U.uPhi,PHI);
+  gl.uniform1f(U.uLp,LP);gl.uniform1f(U.uS,Math.exp(-PHI));gl.uniform1f(U.uT,T);gl.uniform1f(U.uDW,DW);gl.uniform1f(U.uDH,DH);
+  gl.uniform3f(U.uH,H.x,H.y,H.z);
+  const pb=portalB();gl.uniform3f(U.uPB,pb.x,0,pb.z);gl.uniform3f(U.uPA,PA.x,0,PA.z);gl.uniform2f(U.uPS,PW,PHT);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  hudT+=dt;if(hudT>0.12){hudT=0;const ph=phiP(st.x,st.z);
+    whereEl.textContent=hallXZ(st.x,st.z)?'Inside the shed':(frXZ(st.x,st.z)?'In the front hallway':(bkXZ(st.x,st.z)?'In the back hallway':'Outside'));
+    const s=Math.exp(ph);scaleEl.textContent='×'+(s<10?s.toFixed(1):Math.round(s));walkedEl.textContent=Math.round(st.walked)+' m';}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const sheet=document.getElementById('sheet'),phiIn=document.getElementById('phi'),phiv=document.getElementById('phiv'),corIn=document.getElementById('cor'),corv=document.getElementById('corv'),sizeNote=document.getElementById('sizeNote');
+function physHall(){let s=0;const n=200;for(let i=0;i<n;i++){s+=Math.exp(PHI*S((i+0.5)/n));}return s/n*LP;}
+function updNote(){const s=Math.exp(PHI);const w=2*(H.x-T)*s,d=(2*H.z-2*LP)*s,h=(H.y-T)*s;
+  sizeNote.textContent=`From outside, the shed is ${2*H.x} m by ${(2*H.z).toFixed(1)} m. Inside, the hall is about ${Math.round(w)} m wide, ${Math.round(d)} m deep, and ${Math.round(h)} m tall. Each hallway is about ${physHall().toFixed(0)} m long to walk.`;}
+function updPhi(){PHI=+phiIn.value;const s=Math.exp(PHI);phiv.textContent='×'+(s<10?s.toFixed(1):Math.round(s));updNote();eyeY();}
+function updCor(){LP=+corIn.value;corv.textContent=LP.toFixed(2)+' m';updNote();eyeY();}
+phiIn.addEventListener('input',updPhi);corIn.addEventListener('input',updCor);updPhi();updCor();
+function resetPos(){st.x=0;st.z=8;st.yaw=0;st.pitch=-0.03;st.walked=0;eyeY();}
+document.getElementById('gear').onclick=()=>{sheet.classList.add('open');};
+document.getElementById('close').onclick=()=>sheet.classList.remove('open');
+document.getElementById('qual').onchange=e=>{QUAL=+e.target.value;resize();};
+document.getElementById('reset').onclick=()=>{resetPos();sheet.classList.remove('open');};
+document.getElementById('start').onclick=()=>{document.getElementById('intro').style.display='none';setTimeout(()=>{document.getElementById('hint').style.display='none';},6000);};
+})();
+</script>
+</body>
+</html>
